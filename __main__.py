@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import logging
 import functools
+import datetime
 from pandas_schema import Column, Schema, validation as val
 
 FILENAMES = ["weather.20160201", "weather.20160301"]
@@ -48,7 +49,13 @@ def validate_weather_data(frame_in: pd.DataFrame):
     # TODO Min only range and length
     weather_file_schema = Schema(
         [
-            Column("ForecastSiteCode", [val.IsDtypeValidation(np.dtype("int64"))]),
+            Column(
+                "ForecastSiteCode",
+                [
+                    val.InRangeValidation(1000, 100000),
+                    val.IsDtypeValidation(np.dtype("int64")),
+                ],
+            ),
             Column(
                 "ObservationTime",
                 [
@@ -64,8 +71,16 @@ def validate_weather_data(frame_in: pd.DataFrame):
                     val.IsDtypeValidation(np.dtype("int64")),
                 ],
             ),  # 16 points of the compass (N is 0 and 16 since it is 0 and 360 degrees)
-            Column("WindSpeed", [val.CanConvertValidation(int)], allow_empty=True),
-            Column("WindGust", [val.CanConvertValidation(int)], allow_empty=True),
+            Column(
+                "WindSpeed",
+                [val.InRangeValidation(0, 255), val.CanConvertValidation(int)],
+                allow_empty=True,
+            ),
+            Column(
+                "WindGust",
+                [val.InRangeValidation(0, 255), val.CanConvertValidation(int)],
+                allow_empty=True,
+            ),
             Column("Visibility", [val.CanConvertValidation(int)], allow_empty=True),
             Column(
                 "ScreenTemperature",
@@ -75,7 +90,11 @@ def validate_weather_data(frame_in: pd.DataFrame):
                 ],
                 allow_empty=True,
             ),
-            Column("Pressure", [val.CanConvertValidation(int)], allow_empty=True),
+            Column(
+                "Pressure",
+                [val.InRangeValidation(870, 1085), val.CanConvertValidation(int)],
+                allow_empty=True,
+            ),
             Column(
                 "SignificantWeatherCode",
                 [val.InRangeValidation(0, 31)],
@@ -119,17 +138,27 @@ def transform_weather_df(frame_in: pd.DataFrame) -> pd.DataFrame:
     Use reverse geocode generated data to populate Region and Country with more accurate data
     Remove duplicates
     """
-    frame_out = frame_in.assign(
-        ObservationTime = lambda df: df.ObservationTime.astype(np.dtype(str)),
-        ObservationDateTime=lambda df: df.ObservationDate.str.slice(0, 11)
-        + df.ObservationTime.str.zfill(2)
-        + df.ObservationDate.str.slice(13,)
+
+    frame_out = (
+        frame_in.astype({"ObservationTime": np.dtype(str)})
+        .assign(
+            ObservationDateTime=lambda df: df.ObservationDate.str.slice(0, 11)
+            + df.ObservationTime.str.zfill(2)
+            + df.ObservationDate.str.slice(13,),
+            SiteName=lambda df: np.where(
+                df.ForecastSiteCode < 10000,
+                df.SiteName.str[:-7].str.title(),
+                df.SiteName.str[:-8].str.title(),
+            ),
+        )
+        .drop(columns=["ObservationTime", "ObservationDate"])
     )
+
     return frame_out
 
 
 def export_weather_to_parquet(frame_in: pd.DataFrame):
-    frame_in.to_parquet("Data/weather.parquet", compression="GZIP")
+    frame_in.to_parquet("Data/weather.parquet", index=False)
 
 
 def main():
@@ -140,6 +169,7 @@ def main():
     validate_weather_data(raw_weather_frame)
 
     weather_frame_out = transform_weather_df(raw_weather_frame)
+
     export_weather_to_parquet(weather_frame_out)
 
 
