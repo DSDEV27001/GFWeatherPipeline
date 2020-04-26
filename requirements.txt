@@ -1,13 +1,7 @@
-certifi==2020.4.5.1
-fastparquet==0.3.3
-llvmlite==0.31.0
-numba==0.48.0
-numpy==1.18.1
+numpy==1.18.3
 pandas==1.0.3
 pandas-schema==0.3.5
-python-dateutil==2.8.1
+pyarrow==0.17.0
+pydrill==0.3.4
+pytest==5.4.1
 python-snappy==0.5.4
-pytz==2019.3
-six==1.14.0
-thrift==0.11.0
-wincertstore==0.2

@@ -1,10 +1,7 @@
-import unittest
+import pytest
 
+def test_sum():
+    assert sum([1, 2, 3]) == 6, "Should be 6"
 
-class MyTestCase(unittest.TestCase):
-    def test_something(self):
-        self.assertEqual(True, False)
-
-
-if __name__ == '__main__':
-    unittest.main()
+def test_sum_tuple():
+    assert sum((1, 2, 2)) == 6, "Should be 6"

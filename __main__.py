@@ -8,9 +8,9 @@ from pydrill import client, exceptions
 
 FILENAMES = ["weather.20160201", "weather.20160301"]
 
-logger = logging.getLogger(__name__)
+clogger = logging.getLogger(__name__)
 fh = logging.FileHandler("error.log")
-logger.addHandler(fh)
+clogger.addHandler(fh)
 
 
 def log_error(logger):
@@ -33,16 +33,26 @@ def log_error(logger):
     return decorated
 
 
-@log_error(logger)
+
 def import_monthly_weather_csv(fpath: str) -> pd.DataFrame:
     """
     Imports a monthly weather .csv into a DataFrame
     Converts -99 to null
     Removes leading and trailing whitespace
     """
-    frame_out = pd.read_csv(
-        f"Data/{fpath}.csv", na_values=-99, float_precision="round_trip"
-    ).applymap(lambda x: x.strip() if isinstance(x, str) else x)
+    try:
+        frame_out = pd.read_csv(f"Data/{fpath}.csv", na_values=-99).applymap(
+            lambda x: x.strip() if isinstance(x, str) else x
+        )
+    except Exception as e:
+        if clogger:
+            clogger.exception(e)
+        raise
+    # except IOError:
+    # except FileNotFoundError:
+    # except TypeError:
+    # except NameError:
+
     return frame_out
 
 
@@ -128,14 +138,20 @@ def validate_weather_data(frame_in: pd.DataFrame):
     errors = weather_file_schema.validate(frame_in)
     if len(errors) > 0:
         for error in errors:
-            logger.exception(error)
-        # TODO: Create exception class to handle error
-        raise Exception(
-            "Error: Weather files data validation failed. Please refer to the log file for detailed information."
+            clogger.exception(error)
+        raise DataValidationError(
+            "Error: Data validation failed. Please refer to the log file for detailed information."
         )
 
 
+class DataValidationError(Exception):
+    """
+    Exception raised when data validation produces errors.
+    """
+
+
 # TODO Add additional categorical data types e.g compass points, weather types and visibility codes
+@log_error(clogger)
 def transform_weather_df(frame_in: pd.DataFrame) -> pd.DataFrame:
     """
     Merge date and time into one field use standard ISO format
@@ -174,11 +190,13 @@ def transform_weather_df(frame_in: pd.DataFrame) -> pd.DataFrame:
 
     return frame_out
 
-
+@log_error(clogger)
 def export_weather_to_parquet(frame_in: pd.DataFrame):
-    frame_in.to_parquet("Data/weather.parquet", index=False, engine="pyarrow", row_group_size=10000)
+    frame_in.to_parquet(
+        "Data/weather.parquet", index=False, engine="pyarrow", row_group_size=10000
+    )
 
-
+@log_error(clogger)
 def max_daily_average_temperature(frame_in: pd.DataFrame):
     sql = textwrap.dedent(
         """select
@@ -206,7 +224,7 @@ def max_daily_average_temperature(frame_in: pd.DataFrame):
 
     drill_query_parquet(frame_in, sql)
 
-
+@log_error(clogger)
 def drill_query_parquet(frame_in: pd.DataFrame, sql):
     """
 
@@ -231,7 +249,7 @@ def drill_query_parquet(frame_in: pd.DataFrame, sql):
     )
 
     print(
-        "\nData for weather station site with the maximum daily average temperature: \n\n"
+        "\nData for weather station site with the hottest day (maximum daily average temperature): \n\n"
         + "".join(column_name.ljust(width) for column_name in header)
         + "\n"
         + "".join(
@@ -239,7 +257,7 @@ def drill_query_parquet(frame_in: pd.DataFrame, sql):
         )  # specified rows corrects PyDrill random column output order
     )
 
-
+@log_error(clogger)
 def main():
     raw_weather_frame = pd.concat(
         import_monthly_weather_csv(filename) for filename in FILENAMES
