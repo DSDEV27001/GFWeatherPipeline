@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import logging
 import functools
-import datetime
+import textwrap
 from pandas_schema import Column, Schema, validation as val
 
 FILENAMES = ["weather.20160201", "weather.20160301"]
@@ -46,7 +46,11 @@ def import_monthly_weather_csv(fpath: str) -> pd.DataFrame:
 
 
 def validate_weather_data(frame_in: pd.DataFrame):
-    # TODO Min only range and length
+    """
+    Uses a schema to validate the input dataframe
+    :param frame_in:
+    """
+    # TODO length of text fields and alphanumeric checks
     weather_file_schema = Schema(
         [
             Column(
@@ -130,6 +134,7 @@ def validate_weather_data(frame_in: pd.DataFrame):
         )
 
 
+# TODO Add additional categorical data types / codes compass points/ weather codes/visibility
 def transform_weather_df(frame_in: pd.DataFrame) -> pd.DataFrame:
     """
     Merge date and time into one field use standard ISO format
@@ -139,26 +144,52 @@ def transform_weather_df(frame_in: pd.DataFrame) -> pd.DataFrame:
     Remove duplicates
     """
 
-    frame_out = (
-        frame_in.astype({"ObservationTime": np.dtype(str)})
-        .assign(
-            ObservationDateTime=lambda df: df.ObservationDate.str.slice(0, 11)
-            + df.ObservationTime.str.zfill(2)
-            + df.ObservationDate.str.slice(13,),
-            SiteName=lambda df: np.where(
-                df.ForecastSiteCode < 10000,
-                df.SiteName.str[:-7].str.title(),
-                df.SiteName.str[:-8].str.title(),
-            ),
-        )
-        .drop(columns=["ObservationTime", "ObservationDate"])
-    )
+    frame_out = frame_in.assign(
+        ObservationDateTime=lambda df: df.ObservationDate.str.slice(0, 11)
+        + df.ObservationTime.apply(str).str.zfill(2)
+        + df.ObservationDate.str.slice(13,),
+        SiteName=lambda df: np.where(
+            df.ForecastSiteCode < 10000,
+            df.SiteName.str[:-7].str.title(),
+            df.SiteName.str[:-8].str.title(),
+        ),
+    ).drop_duplicates()
 
     return frame_out
 
 
 def export_weather_to_parquet(frame_in: pd.DataFrame):
     frame_in.to_parquet("Data/weather.parquet", index=False)
+
+
+def drill_query_parquet(frame_in: pd.DataFrame, sql):
+    pass
+
+
+def max_daily_average_temperature(frame_in: pd.DataFrame):
+    sql = textwrap.dedent(
+        """select
+            ObservationDate,Region, DailyAverageTemperature
+        from
+        (
+            select
+                ObservationDate,Region,round(AVG(ScreenTemperature),2) as DailyAverageTemperature
+            from
+                dfs.`Data\weather.parquet`
+            group by
+                ObservationDate,Region
+        )
+    where
+        DailyAverageTemperature =(select
+                                    max(DailyAverageTemperature)
+                                from
+                                    (select
+                                        round(AVG(ScreenTemperature),2) as DailyAverageTemperature
+                                    from
+                                        dfs.`Data\weather.parquet`
+                                    group by
+                                        ObservationDate,Region));"""
+    )
 
 
 def main():
@@ -171,6 +202,8 @@ def main():
     weather_frame_out = transform_weather_df(raw_weather_frame)
 
     export_weather_to_parquet(weather_frame_out)
+
+    max_daily_average_temperature(weather_frame_out)
 
 
 main()
