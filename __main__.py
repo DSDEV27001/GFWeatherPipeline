@@ -4,6 +4,7 @@ import logging
 import functools
 import textwrap
 from pandas_schema import Column, Schema, validation as val
+from pydrill import client, exceptions
 
 FILENAMES = ["weather.20160201", "weather.20160301"]
 
@@ -148,6 +149,7 @@ def transform_weather_df(frame_in: pd.DataFrame) -> pd.DataFrame:
         ObservationDateTime=lambda df: df.ObservationDate.str.slice(0, 11)
         + df.ObservationTime.apply(str).str.zfill(2)
         + df.ObservationDate.str.slice(13,),
+        ObservationDate=lambda df: df.ObservationDate.str.slice(0, 10),
         SiteName=lambda df: np.where(
             df.ForecastSiteCode < 10000,
             df.SiteName.str[:-7].str.title(),
@@ -162,33 +164,64 @@ def export_weather_to_parquet(frame_in: pd.DataFrame):
     frame_in.to_parquet("Data/weather.parquet", index=False)
 
 
-def drill_query_parquet(frame_in: pd.DataFrame, sql):
-    pass
-
-
 def max_daily_average_temperature(frame_in: pd.DataFrame):
     sql = textwrap.dedent(
         """select
-            ObservationDate,Region, DailyAverageTemperature
+            *
         from
         (
             select
-                ObservationDate,Region,round(AVG(ScreenTemperature),2) as DailyAverageTemperature
+                ObservationDate,Region, SiteName,round(AVG(ScreenTemperature),2) as DailyAverageTemperature
             from
-                dfs.`Data\weather.parquet`
+                dfs.`C:\\Users\\Michael\\PycharmProjects\\GFWeatherPipelineTask\\Data\\weather.parquet`
             group by
-                ObservationDate,Region
+                ObservationDate,Region,SiteName
         )
     where
         DailyAverageTemperature =(select
                                     max(DailyAverageTemperature)
                                 from
                                     (select
-                                        round(AVG(ScreenTemperature),2) as DailyAverageTemperature
+                                        ROUND(AVG(ScreenTemperature),2) as DailyAverageTemperature
                                     from
-                                        dfs.`Data\weather.parquet`
+                                        dfs.`C:\\Users\\Michael\\PycharmProjects\\GFWeatherPipelineTask\\Data\\weather.parquet`
                                     group by
-                                        ObservationDate,Region));"""
+                                        ObservationDate,Region,SiteName))"""
+    )
+
+    drill_query_parquet(frame_in, sql)
+
+
+def drill_query_parquet(frame_in: pd.DataFrame, sql):
+    """
+
+    Note: drill must be running on the specified host
+    """
+    drill = client.PyDrill(host="localhost", port=8047)
+    max_daily_temp_results = drill.query(sql, timeout=10)
+
+    if not drill.is_active():
+        raise exceptions.ImproperlyConfigured("Please run Drill first")
+
+    header = ["ObservationDate", "Region", "SiteName", "DailyAverageTemperature"]
+    # print(max_daily_temp_results.data)
+
+    row = list(max_daily_temp_results.rows[0].values())
+    width = (
+        max(
+            max(len(column) for column in row),
+            max(len(column_name) for column_name in header),
+        )
+        + 2
+    )
+
+    print(
+        "\nData for weather station site with the maximum daily average temperature: \n\n"
+        + "".join(column_name.ljust(width) for column_name in header)
+        + "\n"
+        + "".join(
+            column.ljust(width) for column in [row[1], row[2], row[0], row[3]]
+        )  # specified rows corrects PyDrill random column output order
     )
 
 
