@@ -145,23 +145,38 @@ def transform_weather_df(frame_in: pd.DataFrame) -> pd.DataFrame:
     Remove duplicates
     """
 
-    frame_out = frame_in.assign(
-        ObservationDateTime=lambda df: df.ObservationDate.str.slice(0, 11)
-        + df.ObservationTime.apply(str).str.zfill(2)
-        + df.ObservationDate.str.slice(13,),
-        ObservationDate=lambda df: df.ObservationDate.str.slice(0, 10),
-        SiteName=lambda df: np.where(
-            df.ForecastSiteCode < 10000,
-            df.SiteName.str[:-7].str.title(),
-            df.SiteName.str[:-8].str.title(),
-        ),
-    ).drop_duplicates()
+    frame_out = (
+        frame_in.assign(
+            ObservationDateTime=lambda df: df.ObservationDate.str.slice(0, 11)
+            + df.ObservationTime.apply(str).str.zfill(2)
+            + df.ObservationDate.str.slice(13,),
+            SiteName=lambda df: np.where(
+                df.ForecastSiteCode < 10000,
+                df.SiteName.str[:-7].str.title(),
+                df.SiteName.str[:-8].str.title(),
+            ),
+        )
+        .drop_duplicates()
+        .astype(
+            {
+                "ObservationDate": np.dtype("M"),
+                "ObservationDateTime": np.dtype("M"),
+                "Pressure": pd.Int64Dtype(),
+                "WindDirection": pd.Int64Dtype(),
+                "WindSpeed": pd.Int64Dtype(),
+                "SignificantWeatherCode": pd.Int64Dtype(),
+                "WindGust": pd.Int64Dtype(),
+                "Visibility": pd.Int64Dtype(),
+            }
+        )
+        .sort_values(["ObservationDate", "ObservationTime", "Region", "SiteName"])
+    )
 
     return frame_out
 
 
 def export_weather_to_parquet(frame_in: pd.DataFrame):
-    frame_in.to_parquet("Data/weather.parquet", index=False)
+    frame_in.to_parquet("Data/weather.parquet", index=False, engine="pyarrow")
 
 
 def max_daily_average_temperature(frame_in: pd.DataFrame):
@@ -240,11 +255,3 @@ def main():
 
 
 main()
-
-
-# frame = import_monthly_weather_csv("weather.20160201")
-#
-# errors = weather_file_schema.validate(frame)
-#
-# for error in errors:
-#     print(error)
