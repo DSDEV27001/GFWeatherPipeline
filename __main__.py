@@ -135,7 +135,7 @@ def validate_weather_data(frame_in: pd.DataFrame):
         )
 
 
-# TODO Add additional categorical data types / codes compass points/ weather codes/visibility
+# TODO Add additional categorical data types e.g compass points, weather types and visibility codes
 def transform_weather_df(frame_in: pd.DataFrame) -> pd.DataFrame:
     """
     Merge date and time into one field use standard ISO format
@@ -176,7 +176,7 @@ def transform_weather_df(frame_in: pd.DataFrame) -> pd.DataFrame:
 
 
 def export_weather_to_parquet(frame_in: pd.DataFrame):
-    frame_in.to_parquet("Data/weather.parquet", index=False, engine="pyarrow")
+    frame_in.to_parquet("Data/weather.parquet", index=False, engine="pyarrow", row_group_size=10000)
 
 
 def max_daily_average_temperature(frame_in: pd.DataFrame):
