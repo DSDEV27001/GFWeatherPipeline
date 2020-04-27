@@ -1,0 +1,140 @@
+ForecastSiteCode,Locality,Region,Country,Postcode
+3002,Baltasound,Shetland Islands,Scotland,ZE2 9EA
+3005,Gulberwick,Shetland Islands,Scotland,ZE1 0JF
+3008,Stonybreck,Shetland Islands,Scotland,ZE2 9JU
+3017,Tankerness,Orkney Islands,Scotland,KW15 1TH
+3023,Gerinish,Western Isles,Scotland,HS8 5RW
+3026,Holm,Western Isles,Scotland,HS2 0AS
+3031,,Highland,Scotland,IV23 2PJ
+3034,,Highland,Scotland,IV22 2JL
+3037,,Highland,Scotland,IV42 8PZ
+3039,,Highland,Scotland,
+3041,,Highland,Scotland,
+3044,,Highland,Scotland,IV27 4UG
+3047,,Highland,Scotland,PH31 4AR
+3062,,Highland,Scotland,
+3063,Aviemore,Highland,Scotland,PH22 1NX
+3075,Staxigoe,Caithness,Scotland,KW1 4QT
+3065,,Moray,Scotland,PH22 1RB
+3066,Kinloss,Moray,Scotland,IV36 3UX
+3068,Lossiemouth,Moray,Scotland,IV31 6NU
+3080,Aboyne,Aberdeenshire,Scotland,AB34 5JE
+3088,Inverbervie,Aberdeenshire,Scotland,DD10 0SX
+3091,Dyce,Aberdeen City,Scotland,AB21 0UB
+3100,,Argyll and Bute,Scotland,PA77 6UT
+3105,,Argyll and Bute,Scotland,PA42 7AQ
+3111,Kilchenzie,Argyll and Bute,Scotland,PA28 6NZ
+3134,Bishopton,Renfrewshire,Scotland,PA7 5NY
+3136,Monkton,South Ayrshire,Scotland,KA9 2RZ
+3155,Carmichael,South Lanarkshire,Scotland,ML12 6PH
+3144,Gleneagles,Perth and Kinross,Scotland,PH3 1EB
+3148,,Stirling,Scotland,
+3171,Leuchars,Fife,Scotland,KY16 0HN
+3132,Castle Kennedy,Dumfries and Galloway,Scotland,DG9 9ET
+3153,Dùn Droighnein,Dumfries and Galloway,Scotland,DG6 4XE
+3158,Fogo,The Scottish Borders,Scotland,
+3162,Eskdalemuir,Dumfries and Galloway,Scotland,DG13 0QW
+3166,Balerno,City of Edinburgh,Scotland,EH12 9DB
+3904,Castlederg,County Tyrone,Northern Ireland,BT81 7AA
+3907,Limavady,County Londonderry,Northern Ireland,BT49 9HS
+3911,,County Londonderry,Northern Ireland,BT80 9UF
+3915,Portglenone,County Antrim,Northern Ireland,BT44 8BL
+3916,Ballyvoy,County Antrim,Northern Ireland,BT546RL
+3917,Aldergrove,County Antrim,Northern Ireland,BT29 4ZY
+3923,Whitecross,County Armagh,Northern Ireland,BT60 1RQ
+99018,Groomsport,County Down,Northern Ireland,BT19 6PQ
+3302,Caergeiliog,Isle of Anglesey,Wales,LL65 3NR
+3305,Capel Curig,Conwy,Wales,LL24 0ES
+3313,Bodelwyddan,Denbighshire,Wales,LL18 5YB
+3321,Broughton,Flintshire,Wales,CH5 3US
+3405,Aberdaron,Gwynedd,Wales,LL53 8DB
+3409,Llanfor,Gwynedd,Wales,LL23 7DS
+3410,Llanwddyn,Powys,Wales,SY10 0NA
+3502,Aberporth,Ceredigion,Wales,SA43 2DH
+3503,Llanafan,Ceredigion,Wales,SY23 4AU
+3507,Tirabad,Powys,Wales,LD4 4DW
+3604,Milford Haven,Pembrokeshire,Wales,SA73 3EW
+3605,,Carmarthenshire,Wales,
+3609,Mumbles,Swansea,Wales,SA3 4JT
+3716,St Athan,Vale of Glamorgan,Wales,CF62 4NS
+3204,Malew,Rushen,Isle of Man,
+3210,Copeland,North West England,England,CA28 9UU
+3212,Allerdale,North West England,England,CA12 5QA
+3214,Barrow-in-Furness,North West England,England,LA14 1AF
+3220,Carlisle,North West England,England,CA6 4SJ
+3224,Gilsland,North East England,England,CA8 7EW
+3225,Eden,North West England,England,CA10 3NE
+3226,Eden,North West England,England,CA16 6LU
+3227,Eden,North West England,England,
+3316,Sefton,North West England,England,L23 8SX
+3318,Broughton,Flintshire,Wales,CH4 0TH
+3230,Rochester,North East England,England,NE19 1TD
+3238,Stamfordham,North East England,England,NE15 0RQ
+3240,Longhoughton,North East England,England,NE66 3NT
+3275,Loftus,North East England,England,
+3257,Hambleton,Yorkshire and the Humber,England,DL8 2JF
+3261,Harrogate,Yorkshire and the Humber,England,YO7 3EZ
+3265,Hambleton,Yorkshire and the Humber,England,YO7 3NZ
+3266,Hambleton,Yorkshire and the Humber,England,YO30 2TD
+3281,Ryedale,Yorkshire and the Humber,England,YO18 7NS
+3292,Sewerby,Yorkshire and the Humber,England,YO15 2LL
+3344,Bradford,Yorkshire and the Humber,England,BD15 0BZ
+3382,Molescroft,Yorkshire and the Humber,England,HU17 9GP
+99214,Hull,Yorkshire and the Humber,England,HU9 3HT
+3330,Staffordshire Moorlands,West Midlands,England,ST13 8TP
+3414,Shawbury,West Midlands,England,SY4 4NN
+3520,Shobdon,West Midlands,England,HR6 9BZ
+3522,Credenhill,West Midlands,England,HR4 7FE
+3529,Wychavon,West Midlands,England,WR10 2JW
+3535,North Warwickshire,West Midlands,England,B46 3JH
+3544,Rugby,West Midlands,England,CV23 9HQ
+3354,NottinghamshireBroxtowe,East Midlands,England,NG16 1HS
+3373,West Lindsey,East Midlands,England,LN1 2ST
+3377,North Kesteven,East Midlands,England,LN5 9NB
+3379,North Kesteven,East Midlands,England,NG34 8HN
+3385,East Lindsey,East Midlands,England,LN11 7NT
+3391,East Lindsey,East Midlands,England,LN4 4UY
+3392,East Lindsey,East Midlands,England,PE24 4BA
+3469,South Holland,East Midlands,England,PE12 9NJ
+3462,Wittering,East of England,England,PE8 6NN
+3482,King's Lynn and West Norfolk,East of England,England,PE33 9JS
+3488,North Norfolk,East of England,England,NR25 7EG
+3560,Thurleigh,East of England,England,MK44 2DA
+3590,Mid Suffolk,East of England,England,IP7 7RJ
+3684,Braintree,East of England,England,CM7 5DY
+3693,Rochford,East of England,England,SS3 0DH
+3628,Filton,South West England,England,BS34 5BZ
+3647,Cotswold,South West England,England,
+3707,North Devon,South West England,England,EX31 4AS
+3710,Somerset West and Taunton,South West England,England,TA22 9QA
+3740,Bradenstoke,South West England,England,SN11 9JJ
+3743,Larkhill,South West England,England,SP4 8NA
+3746,Amesbury,South West England,England,SP4 0JF
+3803,Old Town,South West England,England,TR21 0PA
+3808,Penponds,South West England,England,TR14 0DB
+3809,Helston,South West England,England,TR13 8RS
+3823,Bodmin,South West England,England,PL31 2AZ
+3827,Plymouth,South West England,England,PL9 9XA
+3839,East Devon,South West England,England,EX5 2DY
+3840,East Devon,South West England,England,EX14 4LJ
+3853,South Somerset,South West England,England,BA22 8HB
+3857,Southwell,South West England,England,DT5 2JT
+3862,Throop,South West England,England,BH23 6BL
+3649,West Oxfordshire,South East,England,OX18 3FF
+3660,Walter's Ash,South East,England,HP14 4XQ
+3672,London,Greater London,England,UB10 9AP
+3749,Test Valley,South East,England,SO20 8DX
+3761,Hart,South East,England,RG29 1QG
+3768,Rushmoor,South East,England,GU14 6FF
+3769,Mole Valley,South East,England,RH6 0EN
+3772,London,Greater London,England,TW6 2LA
+3781,Tandridge,South East,England,CR3 0AG
+3784,Gravesham,South East,England,DA11 9BB
+3796,Dover,South East,England,CT15 5NA
+3797,Thanet,South East,England,CT12 4HT
+3866,Niton,South East,England,PO38 2NP
+3872,Chichester,South East,England,PO10 8DP
+3876,Adur,South East,England,BN43 5TE
+3882,Wealden,South East,England,BN27 4PH
+3658,South Oxfordshire,South East,England,OX10 6LR
+3072,Perth,Perth and Kinross,Scotland,PH1

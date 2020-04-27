@@ -52,6 +52,9 @@ def import_monthly_weather_csv(fpath: str) -> pd.DataFrame:
     # except FileNotFoundError:
     # except TypeError:
     # except NameError:
+    # except PermissionError
+
+    # frame_out[["ForecastSiteCode","Latitude","Longitude"]].drop_duplicates().to_csv("Data/ForecastSiteCords.csv",index=False)
 
     return frame_out
 

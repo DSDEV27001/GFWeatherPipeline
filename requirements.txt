@@ -5,3 +5,5 @@ pyarrow==0.17.0
 pydrill==0.3.4
 pytest==5.4.1
 python-snappy==0.5.4
+locationiq~=0.0.2
+tqdm~=4.45.0
