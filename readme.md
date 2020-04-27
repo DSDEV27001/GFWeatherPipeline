@@ -34,7 +34,7 @@ The geo-coding module was used to verify accuracy of the provided region and cou
 - The hottest day is the day with the highest daily average temperature not the day with the highest reached temperature for any hour of the day
 - '-99' in WindSpeed, ScreenTemperature and SignificantWeatherCode columns indicates that data is not available and thus equates to null
 - Enrichment of this data is valuable for downstream analysis and modelling
-- The good coding practice of fine grain exception handling is outside the scope of this task
+- The best coding practice of fine grain exception handling is outside the scope of this task
 
 ### **Data Ranges**
 
@@ -42,6 +42,8 @@ The geo-coding module was used to verify accuracy of the provided region and cou
 - ScreenTemperature is between -50 and 50 degrees celsius
 - WindSpeed and WindGust wont exceed 255 mph as the highest ever recorded was 253 mph
 - Air pressure will be between 870 hPa to 1085 hPa as these are the current recorded minimum and maximum at Earth surface level
+- Visibility will not exceed 125,000 (range: 0 - 1250,000) 
+- Text strings provided in the data will not exceed length 50
 
 ### **Reference Links**
 

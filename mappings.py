@@ -54,15 +54,7 @@ WEATHER_TYPES = {
     29: "Thunder shower (day)",
     30: "Thunder",
 }
-# Number is min value for visibility category and the next number is the maximum value
-VISIBILITY = {
-    0: "Very poor",
-    1000: "Poor",
-    4000: "Moderate",
-    10000: "Good",
-    20000: "Very good",
-    40000: "Excellent",
-}
+
 
 REGION_TO_COUNTRY = {
     "Central Tayside & Fife": "Scotland",

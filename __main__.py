@@ -5,10 +5,11 @@ import functools
 import textwrap
 import retrying
 import mappings
+import re
 from pandas_schema import Column, Schema, validation
 from pydrill import client, exceptions
 
-FILENAMES = ["weather.20160201", "weather.20160301"]
+FILENAMES = ["Data/weather.20160201.csv", "Data/weather.20160301.csv"]
 
 clogger = logging.getLogger(__name__)
 fh = logging.FileHandler("error.log")
@@ -46,7 +47,7 @@ def import_monthly_weather_csv(fpath: str, export_cords: bool = False) -> pd.Dat
     Optionally exports weather station code and latitude and longitude for reverse geo-coding
     """
     try:
-        frame_out = pd.read_csv(f"Data/{fpath}.csv", na_values=-99).applymap(
+        frame_out = pd.read_csv(f"{fpath}", na_values=-99).applymap(
             lambda x: x.strip() if isinstance(x, str) else x
         )
         if export_cords:
@@ -60,12 +61,12 @@ def import_monthly_weather_csv(fpath: str, export_cords: bool = False) -> pd.Dat
         raise
 
 
-# TODO regex validation for length of text fields and alphanumeric checks
 @log_error(clogger)
 def validate_weather_data(frame_in: pd.DataFrame):
     """
     Uses a schema to validate the input dataframe
     """
+    string_check_regex = re.compile(r"^(?=[A-Za-z0-9 &,./\-()\"']{1,50}$)")
 
     weather_file_schema = Schema(
         [
@@ -111,7 +112,12 @@ def validate_weather_data(frame_in: pd.DataFrame):
                 allow_empty=True,
             ),
             Column(
-                "Visibility", [validation.CanConvertValidation(int)], allow_empty=True
+                "Visibility",
+                [
+                    validation.CanConvertValidation(int),
+                    validation.InRangeValidation(0, 125000),
+                ],
+                allow_empty=True,
             ),
             Column(
                 "ScreenTemperature",
@@ -134,7 +140,9 @@ def validate_weather_data(frame_in: pd.DataFrame):
                 [validation.InRangeValidation(0, 31)],
                 allow_empty=True,
             ),
-            Column("SiteName", [validation.CanConvertValidation(str)],),
+            Column(
+                "SiteName", [validation.MatchesPatternValidation(string_check_regex)],
+            ),
             Column(
                 "Latitude",
                 [
@@ -149,8 +157,16 @@ def validate_weather_data(frame_in: pd.DataFrame):
                     validation.IsDtypeValidation(np.dtype(float)),
                 ],
             ),  # Signed longitude range
-            Column("Region", [validation.CanConvertValidation(str)], allow_empty=True),
-            Column("Country", [validation.CanConvertValidation(str)], allow_empty=True),
+            Column(
+                "Region",
+                [validation.MatchesPatternValidation(string_check_regex)],
+                allow_empty=True,
+            ),
+            Column(
+                "Country",
+                [validation.MatchesPatternValidation(string_check_regex)],
+                allow_empty=True,
+            ),
         ]
     )
 
@@ -170,7 +186,6 @@ class DataValidationError(Exception):
     """
 
 
-# TODO Add additional categorical data types e.g visibility codes
 @log_error(clogger)
 def transform_weather_df(frame_in: pd.DataFrame) -> pd.DataFrame:
     """
@@ -192,6 +207,21 @@ def transform_weather_df(frame_in: pd.DataFrame) -> pd.DataFrame:
                 df.ForecastSiteCode < 10000,
                 df.SiteName.str[:-7].str.title(),
                 df.SiteName.str[:-8].str.title(),
+            ),
+            # Creates a categorical field for visibility
+            VisibilityDescription=lambda df: pd.cut(
+                df.Visibility,
+                [0, 1000, 4000, 10000, 20000, 40000, np.inf],
+                labels=[
+                    "Very poor",
+                    "Poor",
+                    "Moderate",
+                    "Good",
+                    "Very good",
+                    "Excellent",
+                ],
+                include_lowest=True,
+                right=False,
             ),
             Region=lambda df: np.where(
                 df.ForecastSiteCode == 3204, "Isle of Man", df.Region
@@ -234,7 +264,7 @@ def export_weather_to_parquet(frame_in: pd.DataFrame):
     frame_in.to_parquet(
         "Data/weather.parquet", index=False, engine="pyarrow", row_group_size=10000
     )
-    # frame_in.to_csv("Data/weather.csv", index=False)
+    frame_in.to_csv("Data/weather.csv", index=False)
 
 
 @log_error(clogger)
