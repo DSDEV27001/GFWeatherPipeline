@@ -65,7 +65,6 @@ def import_monthly_weather_csv(fpath: str, export_cords: bool = False) -> pd.Dat
 def validate_weather_data(frame_in: pd.DataFrame):
     """
     Uses a schema to validate the input dataframe
-    :param frame_in:
     """
 
     weather_file_schema = Schema(
@@ -233,7 +232,7 @@ def export_weather_to_parquet(frame_in: pd.DataFrame):
     Exports weather data to a parquet file
     """
     frame_in.to_parquet(
-        "Data/weather.parquet", index=False, engine="pyarrow", row_group_size=25000
+        "Data/weather.parquet", index=False, engine="pyarrow", row_group_size=10000
     )
     # frame_in.to_csv("Data/weather.csv", index=False)
 
