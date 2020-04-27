@@ -3,7 +3,9 @@ import numpy as np
 import logging
 import functools
 import textwrap
-from pandas_schema import Column, Schema, validation as val
+import retrying
+import mappings
+from pandas_schema import Column, Schema, validation
 from pydrill import client, exceptions
 
 FILENAMES = ["weather.20160201", "weather.20160301"]
@@ -15,7 +17,7 @@ clogger.addHandler(fh)
 
 def log_error(logger):
     """
-    Decorator function to log errors
+    Decorator function to log errors generically
     """
 
     def decorated(f):
@@ -33,115 +35,131 @@ def log_error(logger):
     return decorated
 
 
-
-def import_monthly_weather_csv(fpath: str) -> pd.DataFrame:
+@retrying.retry(
+    retry_on_exception=FileNotFoundError or IOError, stop_max_attempt_number=5
+)
+def import_monthly_weather_csv(fpath: str, export_cords: bool = False) -> pd.DataFrame:
     """
     Imports a monthly weather .csv into a DataFrame
     Converts -99 to null
     Removes leading and trailing whitespace
+    Optionally exports weather station code and latitude and longitude for reverse geo-coding
     """
     try:
         frame_out = pd.read_csv(f"Data/{fpath}.csv", na_values=-99).applymap(
             lambda x: x.strip() if isinstance(x, str) else x
         )
+        if export_cords:
+            frame_out[
+                ["ForecastSiteCode", "Latitude", "Longitude"]
+            ].drop_duplicates().to_csv("Data/ForecastSiteCords.csv", index=False)
+        return frame_out
     except Exception as e:
         if clogger:
             clogger.exception(e)
         raise
-    # except IOError:
-    # except FileNotFoundError:
-    # except TypeError:
-    # except NameError:
-    # except PermissionError
-
-    # frame_out[["ForecastSiteCode","Latitude","Longitude"]].drop_duplicates().to_csv("Data/ForecastSiteCords.csv",index=False)
-
-    return frame_out
 
 
+# TODO regex validation for length of text fields and alphanumeric checks
+@log_error(clogger)
 def validate_weather_data(frame_in: pd.DataFrame):
     """
     Uses a schema to validate the input dataframe
     :param frame_in:
     """
-    # TODO length of text fields and alphanumeric checks
+
     weather_file_schema = Schema(
         [
             Column(
                 "ForecastSiteCode",
                 [
-                    val.InRangeValidation(1000, 100000),
-                    val.IsDtypeValidation(np.dtype("int64")),
+                    validation.InRangeValidation(1000, 100000),
+                    validation.IsDtypeValidation(np.dtype("int64")),
                 ],
             ),
             Column(
                 "ObservationTime",
                 [
-                    val.InRangeValidation(0, 24),
-                    val.IsDtypeValidation(np.dtype("int64")),
+                    validation.InRangeValidation(0, 24),
+                    validation.IsDtypeValidation(np.dtype("int64")),
                 ],
             ),
-            Column("ObservationDate", [val.DateFormatValidation("%Y-%m-%dT%H:%M:%S")]),
+            Column(
+                "ObservationDate",
+                [validation.DateFormatValidation("%Y-%m-%dT%H:%M:%S")],
+            ),
             Column(
                 "WindDirection",
                 [
-                    val.InRangeValidation(0, 17),
-                    val.IsDtypeValidation(np.dtype("int64")),
+                    validation.InRangeValidation(0, 17),
+                    validation.IsDtypeValidation(np.dtype("int64")),
                 ],
             ),  # 16 points of the compass (N is 0 and 16 since it is 0 and 360 degrees)
             Column(
                 "WindSpeed",
-                [val.InRangeValidation(0, 255), val.CanConvertValidation(int)],
+                [
+                    validation.InRangeValidation(0, 255),
+                    validation.CanConvertValidation(int),
+                ],
                 allow_empty=True,
             ),
             Column(
                 "WindGust",
-                [val.InRangeValidation(0, 255), val.CanConvertValidation(int)],
+                [
+                    validation.InRangeValidation(0, 255),
+                    validation.CanConvertValidation(int),
+                ],
                 allow_empty=True,
             ),
-            Column("Visibility", [val.CanConvertValidation(int)], allow_empty=True),
+            Column(
+                "Visibility", [validation.CanConvertValidation(int)], allow_empty=True
+            ),
             Column(
                 "ScreenTemperature",
                 [
-                    val.InRangeValidation(-50, +50),
-                    val.IsDtypeValidation(np.dtype(float)),
+                    validation.InRangeValidation(-50, +50),
+                    validation.IsDtypeValidation(np.dtype(float)),
                 ],
                 allow_empty=True,
             ),
             Column(
                 "Pressure",
-                [val.InRangeValidation(870, 1085), val.CanConvertValidation(int)],
+                [
+                    validation.InRangeValidation(870, 1085),
+                    validation.CanConvertValidation(int),
+                ],
                 allow_empty=True,
             ),
             Column(
                 "SignificantWeatherCode",
-                [val.InRangeValidation(0, 31)],
+                [validation.InRangeValidation(0, 31)],
                 allow_empty=True,
             ),
-            Column("SiteName", [val.CanConvertValidation(str)],),
+            Column("SiteName", [validation.CanConvertValidation(str)],),
             Column(
                 "Latitude",
                 [
-                    val.InRangeValidation(-90, 90),
-                    val.IsDtypeValidation(np.dtype(float)),
+                    validation.InRangeValidation(-90, 90),
+                    validation.IsDtypeValidation(np.dtype(float)),
                 ],
             ),  # Signed latitude range
             Column(
                 "Longitude",
                 [
-                    val.InRangeValidation(-180, 80),
-                    val.IsDtypeValidation(np.dtype(float)),
+                    validation.InRangeValidation(-180, 80),
+                    validation.IsDtypeValidation(np.dtype(float)),
                 ],
             ),  # Signed longitude range
-            Column("Region", [val.CanConvertValidation(str)], allow_empty=True),
-            Column("Country", [val.CanConvertValidation(str)], allow_empty=True),
+            Column("Region", [validation.CanConvertValidation(str)], allow_empty=True),
+            Column("Country", [validation.CanConvertValidation(str)], allow_empty=True),
         ]
     )
 
     errors = weather_file_schema.validate(frame_in)
     if len(errors) > 0:
-        for error in errors:
-            clogger.exception(error)
+        if clogger:
+            for error in errors:
+                clogger.exception(error)
         raise DataValidationError(
             "Error: Data validation failed. Please refer to the log file for detailed information."
         )
@@ -153,15 +171,17 @@ class DataValidationError(Exception):
     """
 
 
-# TODO Add additional categorical data types e.g compass points, weather types and visibility codes
+# TODO Add additional categorical data types e.g visibility codes
 @log_error(clogger)
 def transform_weather_df(frame_in: pd.DataFrame) -> pd.DataFrame:
     """
-    Merge date and time into one field use standard ISO format
-    Transform SiteName into Proper Case
-    Ensure reverse geocode data generated for all weather stations
-    Use reverse geocode generated data to populate Region and Country with more accurate data
-    Remove duplicates
+    Merges date and time into one field using standard ISO format
+    Transforms SiteName into proper case
+    Uses maps to populate Country with more accurate and complete data
+    (eg Glasgow and Strathclyde are not in England!)
+    Enriches data with human readable information
+    Corrects wrongly inferred types
+    Removes data duplicates
     """
 
     frame_out = (
@@ -173,6 +193,20 @@ def transform_weather_df(frame_in: pd.DataFrame) -> pd.DataFrame:
                 df.ForecastSiteCode < 10000,
                 df.SiteName.str[:-7].str.title(),
                 df.SiteName.str[:-8].str.title(),
+            ),
+            Region=lambda df: np.where(
+                df.ForecastSiteCode == 3204, "Isle of Man", df.Region
+            ),
+            # Corrects capitalised and blank countries
+            Country=lambda df: df.Region.map(
+                mappings.REGION_TO_COUNTRY, na_action="ignore"
+            ),
+            # Enriches data with human readable information
+            WindCompass=lambda df: df.WindDirection.map(
+                mappings.COMPASS_16_PT, na_action="ignore"
+            ),
+            WeatherType=lambda df: df.SignificantWeatherCode.map(
+                mappings.WEATHER_TYPES, na_action="ignore"
             ),
         )
         .drop_duplicates()
@@ -190,17 +224,26 @@ def transform_weather_df(frame_in: pd.DataFrame) -> pd.DataFrame:
         )
         .sort_values(["ObservationDate", "ObservationTime", "Region", "SiteName"])
     )
-
     return frame_out
+
 
 @log_error(clogger)
 def export_weather_to_parquet(frame_in: pd.DataFrame):
+    """
+    Exports weather data to a parquet file
+    """
     frame_in.to_parquet(
-        "Data/weather.parquet", index=False, engine="pyarrow", row_group_size=10000
+        "Data/weather.parquet", index=False, engine="pyarrow", row_group_size=25000
     )
+    # frame_in.to_csv("Data/weather.csv", index=False)
+
 
 @log_error(clogger)
 def max_daily_average_temperature(frame_in: pd.DataFrame):
+    """
+    SQL Query text designed to answer task questions
+    Passes the sql string and the DataFrame to another function to execute in drill
+    """
     sql = textwrap.dedent(
         """select
             *
@@ -225,24 +268,31 @@ def max_daily_average_temperature(frame_in: pd.DataFrame):
                                         ObservationDate,Region,SiteName))"""
     )
 
-    drill_query_parquet(frame_in, sql)
+    query_out = query_parquet(frame_in, sql)
+    format_task_query_output(query_out)
+
 
 @log_error(clogger)
-def drill_query_parquet(frame_in: pd.DataFrame, sql):
+def query_parquet(frame_in: pd.DataFrame, sql: str):
     """
-
+    Uses Apache Drill to interrogate the weather parquet file
+    with a specified SQL query
     Note: drill must be running on the specified host
     """
     drill = client.PyDrill(host="localhost", port=8047)
-    max_daily_temp_results = drill.query(sql, timeout=10)
 
     if not drill.is_active():
-        raise exceptions.ImproperlyConfigured("Please run Drill first")
+        raise exceptions.ImproperlyConfigured(
+            "Apache Drill must be running to allow querying of parquet data"
+        )
 
+    return drill.query(sql, timeout=10)
+
+
+def format_task_query_output(query_output):
     header = ["ObservationDate", "Region", "SiteName", "DailyAverageTemperature"]
-    # print(max_daily_temp_results.data)
 
-    row = list(max_daily_temp_results.rows[0].values())
+    row = list(query_output.rows[0].values())
     width = (
         max(
             max(len(column) for column in row),
@@ -256,23 +306,33 @@ def drill_query_parquet(frame_in: pd.DataFrame, sql):
         + "".join(column_name.ljust(width) for column_name in header)
         + "\n"
         + "".join(
-            column.ljust(width) for column in [row[1], row[2], row[0], row[3]]
-        )  # specified rows corrects PyDrill random column output order
+            # corrects PyDrill random column output order bug/feature
+            column.ljust(width)
+            for column in [row[1], row[2], row[0], row[3]]
+        )
     )
 
-@log_error(clogger)
+
 def main():
-    raw_weather_frame = pd.concat(
-        import_monthly_weather_csv(filename) for filename in FILENAMES
-    )
+    try:
+        raw_weather_frame = pd.concat(
+            import_monthly_weather_csv(filename) for filename in FILENAMES
+        )
 
-    validate_weather_data(raw_weather_frame)
+        validate_weather_data(raw_weather_frame)
 
-    weather_frame_out = transform_weather_df(raw_weather_frame)
+        weather_frame_out = transform_weather_df(raw_weather_frame)
 
-    export_weather_to_parquet(weather_frame_out)
+        export_weather_to_parquet(weather_frame_out)
 
-    max_daily_average_temperature(weather_frame_out)
+        max_daily_average_temperature(weather_frame_out)
+
+    except Exception as e:
+        if clogger:
+            clogger.exception(e)
+        raise
+    finally:
+        logging.shutdown()
 
 
 main()

@@ -63,3 +63,23 @@ VISIBILITY = {
     20000: "Very good",
     40000: "Excellent",
 }
+
+REGION_TO_COUNTRY = {
+    "Central Tayside & Fife": "Scotland",
+    "Dumfries, Galloway": "Scotland",
+    "East Midlands": "England",
+    "East of England": "England",
+    "Grampian": "Scotland",
+    "Highland & Eilean Siar": "Scotland",
+    "London & South East": "England",
+    "North East England": "England",
+    "North West England": "England",
+    "Northern Ireland": "Northern Ireland",
+    "Orkney & Shetland": "Scotland",
+    "South West England": "England",
+    "Strathclyde": "Scotland",
+    "Wales": "Wales",
+    "West Midlands": "England",
+    "Yorkshire & Humber": "England",
+    "Isle of Man": "Isle of Man",
+}

@@ -8,7 +8,9 @@ from tqdm import tqdm
 
 
 def get_reverse_geocodes(fpath: str) -> pd.DataFrame:
-
+    """
+    Returns address information for latitude and longitude data
+    """
     frame_codes = pd.read_csv(fpath, index_col=None)
     geocoder = gc.LocationIQ(os.environ.get("APIKey"), "json")
     results_list_dict = []
@@ -32,13 +34,17 @@ def get_reverse_geocodes(fpath: str) -> pd.DataFrame:
     return frame_out
 
 
-def get_column(frame_in: pd.DataFrame, col: str):
-
+def get_column(frame_in: pd.DataFrame, col: str) -> pd.Series:
+    """
+    Returns a pandas Series if the column exists else returns null series
+    """
     return frame_in.reindex(columns=[col]).squeeze()
 
 
 def transform_reverse_geocodes(frame_in: pd.DataFrame()):
-
+    """
+    Transforms and writes to CSV pertinent geo-code address information
+    """
     state_district = get_column(frame_in, "state_district")
     county = get_column(frame_in, "county")
 
@@ -64,7 +70,7 @@ def transform_reverse_geocodes(frame_in: pd.DataFrame()):
 
 transform_reverse_geocodes(get_reverse_geocodes("Data/ForecastSiteCords.csv"))
 
-# TODO: Error handling eg see codes below and also
+# TODO: Error handling re below codes, etc
 # LocationIqNoPlacesFound if there are no matching results
 # LocationIqInvalidKey If the provided api_key is invalid.
 # LocationIqInvalidRequest If you go past your rate limit.

@@ -6,7 +6,11 @@ to a parquet file. This project is set up so that the resulting parquet file is 
 ### **Prerequisites**
 
 1. Drill must be installed and running (see reference link (3) for more information)
-2. A LocationIQ geo-coding account and the environment variable APIKey set to the secret API key provided (if you intend to run the geocoding module)
+2. A LocationIQ geo-coding account and the environment variable APIKey set to the secret API key provided (if you intend to run the geo-coding module)
+
+### **Note**
+
+The geo-coding module was used to verify accuracy of the provided region and country using reverse geo-coding of the latitude and longitude but it does not need to be included in the final project.
 
 ### **Outputs**
 
@@ -22,7 +26,6 @@ to a parquet file. This project is set up so that the resulting parquet file is 
 ### **Assumptions**
 
 - The code focus should be on the two existing files but well structured code is necessary to allow refactoring if this code needs to process further monthly files 
-- Data is UK only
 - Data files sizes are constant as they are limited by the number of UK weather stations
 - An ETL tool such as Luigi or similar, or the implementation of an AirFlow pipeline would be excessive given the size of datafiles
 - Column units correspond to those in reference link (2) where there is an equivalent
@@ -31,6 +34,7 @@ to a parquet file. This project is set up so that the resulting parquet file is 
 - The hottest day is the day with the highest daily average temperature not the day with the highest reached temperature for any hour of the day
 - '-99' in WindSpeed, ScreenTemperature and SignificantWeatherCode columns indicates that data is not available and thus equates to null
 - Enrichment of this data is valuable for downstream analysis and modelling
+- The good coding practice of fine grain exception handling is outside the scope of this task
 
 ### **Data Ranges**
 
@@ -44,3 +48,4 @@ to a parquet file. This project is set up so that the resulting parquet file is 
 1. Met-office weather types and visibility code definitions https://www.metoffice.gov.uk/services/data/datapoint/code-definitions
 2. Met-office hourly site-specific observations units https://www.metoffice.gov.uk/services/data/datapoint/uk-hourly-site-specific-observations
 3. Instructions on how to install Drill in embedded mode https://drill.apache.org/docs/embedded-mode-prerequisites/
+
