@@ -9,7 +9,7 @@ from pandas_schema import Column, Schema, validation
 from pydrill import client, exceptions
 
 clogger = logging.getLogger(__name__)
-fh = logging.FileHandler("wp.error.log")
+fh = logging.FileHandler("error.log")
 clogger.addHandler(fh)
 
 
@@ -27,28 +27,55 @@ def log_error(logger):
                 if logger:
                     logger.exception(e)
                 raise
+            finally:
+                logging.shutdown()
 
         return wrapped
 
     return decorated
 
 
-def import_monthly_weather_csv(fpath: str, export_cords: bool = False) -> pd.DataFrame:
+def import_monthly_weather_csv(fpath: str) -> pd.DataFrame:
     """
     Imports a monthly weather .csv file into a DataFrame
     Converts -99 to null
     Removes leading and trailing whitespace
-    Optionally exports weather station code and latitude and longitude for reverse geo-coding
     """
     try:
+
         frame_out = pd.read_csv(f"{fpath}", na_values=-99).applymap(
             lambda x: x.strip() if isinstance(x, str) else x
         )
-        if export_cords:
-            frame_out[
-                ["ForecastSiteCode", "Latitude", "Longitude"]
-            ].drop_duplicates().to_csv("Data/ForecastSiteCords.csv", index=False)
+
+        column_names = [
+            "ForecastSiteCode",
+            "ObservationTime",
+            "ObservationDate",
+            "WindDirection",
+            "WindSpeed",
+            "WindGust",
+            "Visibility",
+            "ScreenTemperature",
+            "Pressure",
+            "SignificantWeatherCode",
+            "SiteName",
+            "Latitude",
+            "Longitude",
+            "Region",
+            "Country",
+        ]
+
+        if frame_out.empty:
+            raise pd.errors.EmptyDataError("The file only has a header and no data.")
+        elif len(frame_out.columns.to_list()) < len(column_names):
+            raise DataValidationError("Missing column names or too few row data values.")
+        elif len(frame_out.columns.to_list()) > len(column_names):
+            raise DataValidationError("Extra column names or too many row data values.")
+        elif frame_out.columns.to_list() != column_names:
+            raise DataValidationError("Unexpected column names.")
+
         return frame_out
+
     except Exception as e:
         if clogger:
             clogger.exception(e)
@@ -171,15 +198,23 @@ def validate_weather_data(frame_in: pd.DataFrame):
             for error in errors:
                 clogger.exception(error)
         raise DataValidationError(
-            "Error: Data validation failed. Please refer to the log file for detailed information."
+            "Data validation failed. Please refer to the log file for detailed information."
         )
-
 
 class DataValidationError(Exception):
     """
     Exception raised when data validation produces errors.
     """
 
+@log_error(clogger)
+def export_cords(frame_in: pd.DataFrame):
+    """
+    Optional pipeline function
+    Exports weather station codes and latitude and longitude for reverse geo-coding
+    """
+    frame_in[
+        ["ForecastSiteCode", "Latitude", "Longitude"]
+    ].drop_duplicates().to_csv("Data/ForecastSiteCords.csv", index=False)
 
 @log_error(clogger)
 def transform_weather_df(frame_in: pd.DataFrame) -> pd.DataFrame:
@@ -262,7 +297,7 @@ def export_weather_to_parquet(frame_in: pd.DataFrame):
 
 
 @log_error(clogger)
-def max_daily_average_temperature(frame_in: pd.DataFrame):
+def max_daily_average_temperature():
     """
     SQL Query text designed to answer task questions
     Passes the sql string and the DataFrame to another function to execute in drill
@@ -291,12 +326,12 @@ def max_daily_average_temperature(frame_in: pd.DataFrame):
                                         ObservationDate,Region,SiteName))"""
     )
 
-    query_out = query_parquet(frame_in, sql)
+    query_out = query_parquet(sql)
     format_task_query_output(query_out)
 
 
 @log_error(clogger)
-def query_parquet(frame_in: pd.DataFrame, sql: str):
+def query_parquet(sql: str):
     """
     Uses Apache Drill to interrogate the weather parquet file
     with a specified SQL query

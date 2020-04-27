@@ -21,7 +21,7 @@ def main():
 
         wp.export_weather_to_parquet(weather_frame_out)
 
-        wp.max_daily_average_temperature(weather_frame_out)
+        wp.max_daily_average_temperature()
 
     except Exception as e:
         if clogger:
