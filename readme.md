@@ -27,7 +27,6 @@ The geo-coding module was used to verify accuracy of the provided region and cou
 
 - The code focus should be on the two existing files but well structured code is necessary to allow refactoring if this code needs to process further monthly files 
 - Data files sizes are constant as they are limited by the number of UK weather stations
-- An ETL tool such as Luigi or similar, or the implementation of an AirFlow pipeline would be excessive given the size of datafiles
 - Column units correspond to those in reference link (2) where there is an equivalent
 - SignificantWeatherCode and Visibility correspond to Weather Type Codes and Visibility in reference link (1)
 - The parquet query does not exclude average temperatures for a given day where there is not a full day of readings
