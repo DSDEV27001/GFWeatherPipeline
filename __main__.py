@@ -4,12 +4,14 @@ import pandas as pd
 
 FILENAMES = ["Data/weather.20160201.csv", "Data/weather.20160301.csv"]
 
+PARQUET_FILE_DFS_ABS_PATH = "dfs.`C:/Users/Michael/PycharmProjects/GFWeatherPipelineTask/Data/weather.parquet`"
 clogger = logging.getLogger(__name__)
 fh = logging.FileHandler("error.log")
 clogger.addHandler(fh)
 
 
 def main():
+
     try:
         raw_weather_frame = pd.concat(
             wp.import_monthly_weather_csv(filename) for filename in FILENAMES
@@ -21,7 +23,7 @@ def main():
 
         wp.export_weather_to_parquet(weather_frame_out)
 
-        wp.max_daily_average_temperature()
+        wp.max_daily_average_temperature(PARQUET_FILE_DFS_ABS_PATH)
 
     except Exception as e:
         if clogger:

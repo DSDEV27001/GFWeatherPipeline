@@ -68,7 +68,9 @@ def import_monthly_weather_csv(fpath: str) -> pd.DataFrame:
         if frame_out.empty:
             raise pd.errors.EmptyDataError("The file only has a header and no data.")
         elif len(frame_out.columns.to_list()) < len(column_names):
-            raise DataValidationError("Missing column names or too few row data values.")
+            raise DataValidationError(
+                "Missing column names or too few row data values."
+            )
         elif len(frame_out.columns.to_list()) > len(column_names):
             raise DataValidationError("Extra column names or too many row data values.")
         elif frame_out.columns.to_list() != column_names:
@@ -79,6 +81,7 @@ def import_monthly_weather_csv(fpath: str) -> pd.DataFrame:
     except Exception as e:
         if clogger:
             clogger.exception(e)
+            logging.shutdown()
         raise
 
 
@@ -144,7 +147,7 @@ def validate_weather_data(frame_in: pd.DataFrame):
             Column(
                 "ScreenTemperature",
                 [
-                    validation.InRangeValidation(-50, +50),
+                    validation.InRangeValidation(-50, 50),
                     validation.IsDtypeValidation(np.dtype(float)),
                 ],
                 allow_empty=True,
@@ -201,10 +204,12 @@ def validate_weather_data(frame_in: pd.DataFrame):
             "Data validation failed. Please refer to the log file for detailed information."
         )
 
+
 class DataValidationError(Exception):
     """
     Exception raised when data validation produces errors.
     """
+
 
 @log_error(clogger)
 def export_cords(frame_in: pd.DataFrame):
@@ -212,9 +217,10 @@ def export_cords(frame_in: pd.DataFrame):
     Optional pipeline function
     Exports weather station codes and latitude and longitude for reverse geo-coding
     """
-    frame_in[
-        ["ForecastSiteCode", "Latitude", "Longitude"]
-    ].drop_duplicates().to_csv("Data/ForecastSiteCords.csv", index=False)
+    frame_in[["ForecastSiteCode", "Latitude", "Longitude"]].drop_duplicates().to_csv(
+        "Data/ForecastSiteCords.csv", index=False
+    )
+
 
 @log_error(clogger)
 def transform_weather_df(frame_in: pd.DataFrame) -> pd.DataFrame:
@@ -297,20 +303,20 @@ def export_weather_to_parquet(frame_in: pd.DataFrame):
 
 
 @log_error(clogger)
-def max_daily_average_temperature():
+def max_daily_average_temperature(drill_file_path:str):
     """
     SQL Query text designed to answer task questions
     Passes the sql string and the DataFrame to another function to execute in drill
     """
     sql = textwrap.dedent(
-        """select
+        f"""select
             *
         from
         (
             select
                 ObservationDate,Region, SiteName,round(AVG(ScreenTemperature),2) as DailyAverageTemperature
             from
-                dfs.`C:\\Users\\Michael\\PycharmProjects\\GFWeatherPipelineTask\\Data\\weather.parquet`
+                {drill_file_path}  
             group by
                 ObservationDate,Region,SiteName
         )
@@ -321,7 +327,7 @@ def max_daily_average_temperature():
                                     (select
                                         ROUND(AVG(ScreenTemperature),2) as DailyAverageTemperature
                                     from
-                                        dfs.`C:\\Users\\Michael\\PycharmProjects\\GFWeatherPipelineTask\\Data\\weather.parquet`
+                                        {drill_file_path}    
                                     group by
                                         ObservationDate,Region,SiteName))"""
     )
@@ -360,12 +366,9 @@ def format_task_query_output(query_output):
     )
 
     print(
-        "\nData for weather station site with the hottest day (maximum daily average temperature): \n\n"
-        + "".join(column_name.ljust(width) for column_name in header)
-        + "\n"
-        + "".join(
-            # corrects PyDrill random column output order bug/feature
-            column.ljust(width)
+        f"""\nData for weather station site with the hottest day (maximum daily average temperature): \n
+        {"".join(column_name.ljust(width) for column_name in header)}
+        {"".join(column.ljust(width)
             for column in [row[1], row[2], row[0], row[3]]
-        )
+        )}"""
     )

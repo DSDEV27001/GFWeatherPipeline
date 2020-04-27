@@ -3,11 +3,10 @@ import weather_pipeline
 import pandas as pd
 from pandas.testing import assert_frame_equal
 
-df_test_out = pd.read_csv("Data/CSVTestFiles/test-out.csv")
-
+df_func_example_out = pd.read_csv("Data/CSVTestFiles/test-out.csv")
 
 @pytest.mark.parametrize(
-    "test_path, expectation", [("Data/test-data.csv", df_test_out)],
+    "test_path, expectation", [("Data/example-input-data.csv", df_func_example_out)],
 )
 def test_import_monthly_weather_csv(test_path, expectation):
     assert_frame_equal(
