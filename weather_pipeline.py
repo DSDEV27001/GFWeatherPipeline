@@ -216,6 +216,7 @@ def export_cords(frame_in: pd.DataFrame):
     """
     Optional pipeline function
     Exports weather station codes and latitude and longitude for reverse geo-coding
+    Recommended to run after data validation to avoid data errors
     """
     frame_in[["ForecastSiteCode", "Latitude", "Longitude"]].drop_duplicates().to_csv(
         "Data/ForecastSiteCords.csv", index=False
@@ -227,11 +228,11 @@ def transform_weather_df(frame_in: pd.DataFrame) -> pd.DataFrame:
     """
     Merges date and time into one field using standard ISO format
     Transforms SiteName into proper case
-    Uses maps to populate Country with more accurate and complete data
+    Uses mappings to populate country with more accurate and complete data
     (eg Glasgow and Strathclyde are not in England!)
-    Enriches data with human readable information
+    Enriches data with categorical and human readable information
     Corrects wrongly inferred types
-    Removes data duplicates
+    Removes row duplicates
     """
 
     frame_out = (
@@ -293,17 +294,17 @@ def transform_weather_df(frame_in: pd.DataFrame) -> pd.DataFrame:
 
 
 @log_error(clogger)
-def export_weather_to_parquet(frame_in: pd.DataFrame):
+def export_weather_to_parquet(frame_in: pd.DataFrame, fpath_parquet: str):
     """
     Exports weather data to a parquet file
     """
     frame_in.to_parquet(
-        "Data/weather.parquet", index=False, engine="pyarrow", row_group_size=10000
+        fpath_parquet, index=False, engine="pyarrow", row_group_size=10000
     )
 
 
 @log_error(clogger)
-def max_daily_average_temperature(drill_file_path:str):
+def max_daily_average_temperature(drill_file_path: str):
     """
     SQL Query text designed to answer task questions
     Passes the sql string and the DataFrame to another function to execute in drill

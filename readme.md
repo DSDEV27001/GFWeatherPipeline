@@ -10,7 +10,13 @@ to a parquet file. This project is set up so that the resulting parquet file is 
 
 ### **Note**
 
-The geo-coding module was used to verify accuracy of the provided region and country using reverse geo-coding of the latitude and longitude but it does not need to be included in the final project.
+The geo-coding module was used to help verify accuracy of the provided region and country using reverse geo-coding of the latitude and longitude but it is not necessary for production code.
+
+### **Usage**
+
+Ensure Apache Drill is running and that the correct paths are specified at the top of the `__main__.py` module  and then run this script to produce the parquet file from the given weather files.
+
+To run the geo-coding add-on make sure you have met the prerequisites and generated the ForecastSiteCords.csv by inserting the wp.export_cords function into the main script after wp.validate_weather_data and running this script. Then run the geocoding.py script. Output is written to ForecastSiteAddresses.csv in the Data folder.
 
 ### **Outputs**
 
@@ -21,11 +27,13 @@ The geo-coding module was used to verify accuracy of the provided region and cou
 - What was the temperature on that day?
 - In which region was the hottest day?
 
-(3) Exceptions written to a log file 
+(3) Exceptions written to the file in the project route error.log
+
+(4) [Optional] Reverse geo-coding information for Forecast site Locations
 
 ### **Assumptions**
 
-- The code focus should be on the two existing files but well structured code is necessary to allow refactoring if this code needs to process further monthly files 
+- The code focus should be on the two existing files (the code is well structured code to allow refactoring if the need to process further monthly files is required) 
 - Data files sizes are constant as they are limited by the number of UK weather stations
 - Column units correspond to those in reference link (2) where there is an equivalent
 - SignificantWeatherCode and Visibility correspond to Weather Type Codes and Visibility in reference link (1)
@@ -33,16 +41,18 @@ The geo-coding module was used to verify accuracy of the provided region and cou
 - The hottest day is the day with the highest daily average temperature not the day with the highest reached temperature for any hour of the day
 - '-99' in WindSpeed, ScreenTemperature and SignificantWeatherCode columns indicates that data is not available and thus equates to null
 - Enrichment of this data is valuable for downstream analysis and modelling
-- The best coding practice of fine grain exception handling is outside the scope of this task
+- Exhaustive code coverage for testing is not required for this task
+- Exhaustive error handling is not required for this task
+- Some specified assumptions have been made in data ranges for validation
 
 ### **Data Ranges**
 
-- Latitudes range from -90 to 90, and longitudes range from -180 to 80 as they are signed degrees
-- ScreenTemperature is between -50 and 50 degrees celsius
-- WindSpeed and WindGust wont exceed 255 mph as the highest ever recorded was 253 mph
-- Air pressure will be between 870 hPa to 1085 hPa as these are the current recorded minimum and maximum at Earth surface level
-- Visibility will not exceed 125,000 (range: 0 - 1250,000) 
-- Text strings provided in the data will not exceed length 50
+- Signed degrees for coordinates mean latitudes are [-90, 90], and longitudes are [-180, 80]
+- ScreenTemperature is [-50, 50] degrees celsius
+- WindSpeed and WindGust are considered valid if less than 255 mph as the highest ever recorded wind was 253 mph
+- Air pressures are [870, 1085] hPa as these are the current recorded minimum and maximum at Earth surface level
+- Visibility will not exceed 125,000 [0 - 125,000] 
+- Text strings will not exceed length 50 in the original weather data files
 
 ### **Reference Links**
 

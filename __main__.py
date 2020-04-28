@@ -4,7 +4,10 @@ import pandas as pd
 
 FILENAMES = ["Data/weather.20160201.csv", "Data/weather.20160301.csv"]
 
-PARQUET_FILE_DFS_ABS_PATH = "dfs.`C:/Users/Michael/PycharmProjects/GFWeatherPipelineTask/Data/weather.parquet`"
+PARQUET_OUTPUT_FILE_PATH="Data/weather.parquet"
+
+parquet_file_dfs_abs_path = f"dfs.`C:/Users/Michael/PycharmProjects/GFWeatherPipelineTask/{PARQUET_OUTPUT_FILE_PATH}`"
+
 clogger = logging.getLogger(__name__)
 fh = logging.FileHandler("error.log")
 clogger.addHandler(fh)
@@ -21,9 +24,9 @@ def main():
 
         weather_frame_out = wp.transform_weather_df(raw_weather_frame)
 
-        wp.export_weather_to_parquet(weather_frame_out)
+        wp.export_weather_to_parquet(weather_frame_out,PARQUET_OUTPUT_FILE_PATH)
 
-        wp.max_daily_average_temperature(PARQUET_FILE_DFS_ABS_PATH)
+        wp.max_daily_average_temperature(parquet_file_dfs_abs_path)
 
     except Exception as e:
         if clogger:
