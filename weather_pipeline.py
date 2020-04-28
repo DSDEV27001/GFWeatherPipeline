@@ -354,7 +354,7 @@ def query_parquet(sql: str):
     return drill.query(sql, timeout=10)
 
 
-def format_task_query_output(query_output):
+def format_task_query_output(query_output: dict):
     header = ["ObservationDate", "Region", "SiteName", "DailyAverageTemperature"]
 
     row = list(query_output.rows[0].values())
