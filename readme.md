@@ -27,9 +27,9 @@ To run the geo-coding add-on make sure you have met the prerequisites and genera
 - What was the temperature on that day?
 - In which region was the hottest day?
 
-(3) Exceptions written to the file in the project route error.log
+(3) Exceptions written to the file in the project root error.log
 
-(4) [Optional] Reverse geo-coding information for Forecast site Locations
+(4) [Optional] Reverse geo-coding information for forecast site Locations
 
 ### **Assumptions**
 
